@@ -1,4 +1,29 @@
-# logger.py
+# modulos.logger.py
+
+"""
+Módulo de logging centralizado e thread-safe.
+
+Este módulo fornece uma infraestrutura unificada de logs para aplicações industriais e 
+sistemas de IA. Suporta múltiplos níveis de log (incluindo níveis específicos para IA), 
+saída colorida no console, buffer em memória, persistência em arquivos e anexação de 
+detalhes estruturados em JSON.
+
+Attributes:
+    MAX_LOGS (int): Tamanho máximo do buffer circular (default=5000).
+    CORES_NIVEL (dict): Mapeamento entre níveis de log e cores ANSI.
+    NIVEIS_VALIDOS (set): Conjunto de níveis de log aceitos.
+    LOG_DIR (str): Diretório onde os arquivos de log são gravados.
+
+Functions:
+    log(level, source, message, details=None):
+        Registra um log em console, buffer e arquivo.
+    get_recent_logs(limit=None):
+        Retorna os últimos N registros do buffer.
+    get_logs_since(timestamp):
+        Retorna logs posteriores a um timestamp.
+"""
+
+
 from datetime import datetime
 import threading
 from collections import deque
