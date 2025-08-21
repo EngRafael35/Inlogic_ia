@@ -1,3 +1,5 @@
+# main.py
+
 """
 InLogic Studio - Sistema Principal
 --------------------------------
@@ -671,7 +673,7 @@ class SistemaPrincipal:
 
 
 
-# Em main.py
+
 
 if __name__ == '__main__':
     freeze_support() # Necessário para executáveis Windows
