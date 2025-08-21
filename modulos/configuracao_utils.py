@@ -1,8 +1,36 @@
+# modulos.configuracao_utils.py
+
+
 """
 InLogic Studio - Utilitários de Configuração
--------------------------------------------
-Este módulo contém funções para validação e processamento de configurações.
+
+Este módulo fornece funções para validação e processamento de configurações de
+projetos, drivers e tags dentro do ecossistema InLogic. Garante consistência,
+preenche campos obrigatórios com valores padrão e sugere boas práticas de uso.
+
+Principais responsabilidades:
+    - Validação de fases de operação (monitoramento, sugestão, autônomo).
+    - Acesso e modificação de valores aninhados em dicionários de configuração.
+    - Completar automaticamente campos faltantes em drivers e tags.
+    - Garantir consistência estrutural (ex.: restrições sempre no campo `config`).
+    - Sugerir campos opcionais não configurados.
+
+Classes:
+    FaseOperacao: Enum que define os modos de operação suportados.
+
+Functions:
+    validar_fase_operacao(fase: str) -> str:
+        Valida e normaliza uma fase de operação.
+    get_nested_value(obj: dict, path: str) -> Any:
+        Retorna valores aninhados de dicionários (com fallback em `config`).
+    set_nested_value(obj: dict, path: str, value: Any, prefer_config=True) -> None:
+        Define valores aninhados, priorizando `config` se disponível.
+    validar_e_completar_config(config: dict) -> dict:
+        Valida a configuração e adiciona campos faltantes com valores padrão.
+    log_campos_faltantes(config: dict) -> None:
+        Loga sugestões para campos opcionais não configurados.
 """
+
 
 from typing import Dict, Any
 from enum import Enum
