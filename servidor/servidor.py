@@ -1,5 +1,85 @@
 # servidor.servidor.py
 
+"""
+Módulo: servidor
+----------------
+
+Este módulo implementa o **Servidor de API REST do InLogic**, responsável por expor
+funcionalidades de comunicação entre o núcleo do sistema, agentes inteligentes e 
+interfaces externas (supervisórios, sistemas industriais e serviços de IA).
+
+Arquitetura e Design
+~~~~~~~~~~~~~~~~~~~~
+- Implementação baseada em **Flask**, encapsulada na classe `ServidorAPI`.
+- Execução isolada em **thread dedicada**, garantindo que o servidor não bloqueie o
+  processamento principal.
+- Padronização de logs via módulo central `logger`, assegurando rastreabilidade.
+- Estrutura modular para integração futura com segurança, escalabilidade e orquestração
+  distribuída.
+
+Principais Endpoints
+~~~~~~~~~~~~~~~~~~~~
+- **/api/dados** (GET):
+  Retorna os valores de todos os drivers e suas tags em formato JSON.
+
+- **/api/escrever** (POST):
+  Permite escrita de valor em uma tag específica, com validação de existência de driver e tag.
+
+- **/api/escrever_lote** (POST):
+  Escrita em múltiplas tags de um driver em uma única operação atômica.
+
+- **/api/logs** (GET):
+  Retorna os últimos N registros de log do sistema, útil para auditoria e debug.
+
+- **/api/ia/evento** (POST):
+  Recebe eventos vindos de módulos de IA, registrando-os no log para correlação posterior.
+
+- **/api/ia/acao** (POST):
+  Recebe decisões/ações propostas pela IA e as registra para inspeção ou execução.
+
+- **/api/health** (GET):
+  Fornece diagnóstico detalhado de saúde do sistema (uptime, memória, CPU, drivers, tags).
+
+- **/api/shutdown** (POST):
+  Solicita desligamento seguro do servidor, liberando recursos.
+
+Recursos Técnicos
+~~~~~~~~~~~~~~~~~
+- **Thread-safety**: operações encapsuladas com `threading.Thread` e travas de log.
+- **Resiliência**: tratamento de exceções em todos os endpoints com mensagens padronizadas.
+- **Extensibilidade**: fácil adição de novos endpoints, middlewares e camadas de segurança.
+- **Compatibilidade industrial**: endpoints preparados para integração com CLPs, SCADAs e 
+  motores de IA distribuídos.
+
+Constantes Relevantes
+~~~~~~~~~~~~~~~~~~~~~
+- `host`: endereço de binding do servidor (default: `"0.0.0.0"`).
+- `port`: porta de escuta (default: `5000`).
+- `motor`: instância central de controle e processamento.
+- `log`: função de logging integrada.
+
+Exemplo de Uso
+~~~~~~~~~~~~~~
+>>> from servidor import ServidorAPI
+>>> servidor = ServidorAPI(motor)
+>>> servidor.iniciar()
+ServidorAPI rodando em http://0.0.0.0:5000
+
+Notas
+~~~~~
+Este servidor é projetado como **núcleo de orquestração do InLogic**, sendo
+o ponto central de comunicação entre:
+- Agentes distribuídos de IA
+- Supervisórios industriais
+- Camadas de automação e segurança
+
+Futuras melhorias planejadas incluem:
+- Suporte a autenticação (JWT/API Key)
+- Exportação de métricas Prometheus
+- Balanceamento e escalabilidade horizontal
+"""
+
+
 import json
 import time
 import psutil

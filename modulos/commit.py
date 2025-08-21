@@ -16,7 +16,7 @@ def git_sync(commit_message=None):
     try:
         subprocess.run(["git", "add", "."], check=True)
         if not commit_message:
-            commit_message = "Atualização do reademe"
+            commit_message = "Atualização de docstring"
         subprocess.run(["git", "commit", "-m", commit_message], check=False)
         subprocess.run(["git", "pull", "--rebase", "origin", "main"], check=False)
         subprocess.run(["git", "push", "origin", "main"], check=True)
