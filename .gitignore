@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -205,3 +206,38 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+=======
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+*.sqlite3
+*.db
+.env
+venv/
+.envrc
+.DS_Store
+.idea/
+.vscode/
+*.bak
+*.swp
+*.tmp
+# VSCode
+.vscode/
+# Logs
+logs/
+# Testes
+*.coverage
+.coverage
+# Outros
+*.old
+*.orig
+*.rej
+>>>>>>> 24ed2da (Versão inicial do projeto InLogic IA)
