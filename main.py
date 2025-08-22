@@ -29,13 +29,13 @@ import traceback
 # =========================
 # Flag principal de modo de execução
 # =========================
-RODAR_COMO_SERVICO = False  # Altere para True para rodar como serviço Windows
+RODAR_COMO_SERVICO = True  # Altere para True para rodar como serviço Windows
 
 # =========================
 # Importação dos módulos principais
 # =========================
 from modulos.logger import log
-from sistema import SistemaPrincipal  # Este import não executa o ciclo principal!
+from modulos.sistema import SistemaPrincipal  # Este import não executa o ciclo principal!
 
 
 def executar_console():
