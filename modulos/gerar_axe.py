@@ -9,6 +9,21 @@ Script robusto para empacotamento automático do serviço InLogic com PyInstalle
 - Descobre dinamicamente todas as pastas e arquivos do projeto.
 - Gera o executável .exe (AXE) pronto para rodar como serviço Windows.
 - Funciona em qualquer estrutura de pastas.
+
+-------------------- Gerar o serviço do Inlogic Service ------------------------ 
+
+sc create InLogicService binPath= "C:\Users\lenovo\Desktop\InLogic\InLogic_Studio\inlogic_IA\dist\Service.exe" start= auto DisplayName= "InLogic Service"
+
+
+sc start InLogicService
+
+
+sc stop InLogicService
+
+
+sc delete InLogicService
+
+
 """
 
 def find_project_dirs(base_dir):

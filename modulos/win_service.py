@@ -18,6 +18,7 @@ import win32event
 import servicemanager
 import logging
 import time
+import sys
 import traceback
 import threading  # Para rodar iniciar_subsistemas em background
 
@@ -55,17 +56,24 @@ class InLogicService(win32serviceutil.ServiceFramework):
 
     def SvcDoRun(self):
         """
-        Método chamado pelo SCM ao iniciar o serviço.
-        Faz a inicialização e invoca o ciclo principal.
+        Método chamado pelo Service Control Manager (SCM) ao iniciar o serviço.
+        Inicializa subsistemas em uma thread separada para evitar travar a inicialização.
+        Mantém o loop principal no thread principal, conforme melhores práticas do Windows.
         """
         try:
+            # Sinaliza ao SCM que o serviço está iniciando
             self.ReportServiceStatus(win32service.SERVICE_START_PENDING, waitHint=30000)
             servicemanager.LogInfoMsg("InLogicService | Iniciando...")
+            # Sinaliza que o serviço está rodando
             self.ReportServiceStatus(win32service.SERVICE_RUNNING)
+
+            # Inicializa subsistemas em uma thread separada para não travar o serviço
             threading.Thread(target=self.sistema.iniciar_subsistemas, daemon=True).start()
-            # Loop de ciclo de vida do serviço: fica aguardando até que self.running seja False (parada via SvcStop)
+
+            # Loop principal do serviço: mantém o serviço vivo até receber comando de parada
             while self.running:
                 time.sleep(5)  # Mantém o serviço vivo; pode adicionar healthchecks/monitoramento aqui
+
         except Exception as e:
             # Captura e loga qualquer erro fatal, garantindo reporting correto
             erro = "".join(traceback.format_exception(*sys.exc_info()))
