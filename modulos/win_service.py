@@ -1,4 +1,4 @@
-"""
+r"""
 InLogic Studio - Serviço Windows
 -------------------------------
 Este módulo implementa o serviço do Windows para o sistema InLogic Studio,
@@ -36,11 +36,9 @@ class InLogicService(win32serviceutil.ServiceFramework):
         win32serviceutil.ServiceFramework.__init__(self, args)
         self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)  # Evento para sinalizar parada
         self.running = True  # Flag de ciclo de vida do serviço
-
         from multiprocessing import Manager
-        from sistema import SistemaPrincipal  # Certifique-se que SistemaPrincipal está em sistema.py
         self.manager = Manager()
-        self.sistema = SistemaPrincipal(self.manager)
+        self.sistema = None  # Inicializa como None para evitar erro de atributo
 
     def SvcStop(self):
         """
@@ -49,7 +47,8 @@ class InLogicService(win32serviceutil.ServiceFramework):
         """
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING, waitHint=60000)  # Informa ao Windows que está parando
         self.running = False  # Sinaliza para o loop principal do serviço
-        self.sistema.parar()  # Chama o shutdown seguro do sistema principal
+        if self.sistema:
+            self.sistema.parar()  # Chama o shutdown seguro do sistema principal
         win32event.SetEvent(self.hWaitStop)  # Libera o evento para terminar o serviço
         self.ReportServiceStatus(win32service.SERVICE_STOPPED)  # Informa ao Windows que terminou
         logging.shutdown()  # Finaliza os handlers de log para evitar perda de dados
@@ -60,23 +59,28 @@ class InLogicService(win32serviceutil.ServiceFramework):
         Inicializa subsistemas em uma thread separada para evitar travar a inicialização.
         Mantém o loop principal no thread principal, conforme melhores práticas do Windows.
         """
+
         try:
-            # Sinaliza ao SCM que o serviço está iniciando
+            servicemanager.LogInfoMsg("InLogicService | Inicializando...")
             self.ReportServiceStatus(win32service.SERVICE_START_PENDING, waitHint=30000)
-            servicemanager.LogInfoMsg("InLogicService | Iniciando...")
-            # Sinaliza que o serviço está rodando
-            self.ReportServiceStatus(win32service.SERVICE_RUNNING)
 
-            # Inicializa subsistemas em uma thread separada para não travar o serviço
-            threading.Thread(target=self.sistema.iniciar_subsistemas, daemon=True).start()
+            # importa e instancia apenas aqui!
+            from multiprocessing import Manager
+            from sistema import SistemaPrincipal
+            self.sistema = SistemaPrincipal(Manager())
 
-            # Loop principal do serviço: mantém o serviço vivo até receber comando de parada
+            # roda em background para não travar
+            threading.Thread(
+                target=self.sistema.iniciar_subsistemas,
+                daemon=True
+            ).start()
+
             while self.running:
-                time.sleep(5)  # Mantém o serviço vivo; pode adicionar healthchecks/monitoramento aqui
+                # healthcheck simples
+                servicemanager.LogInfoMsg("InLogicService | vivo...")
+                time.sleep(10)
 
-        except Exception as e:
-            # Captura e loga qualquer erro fatal, garantindo reporting correto
+        except Exception:
             erro = "".join(traceback.format_exception(*sys.exc_info()))
             servicemanager.LogErrorMsg(f"InLogicService | Erro fatal:\n{erro}")
             self.SvcStop()
-            raise

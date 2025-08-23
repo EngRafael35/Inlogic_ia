@@ -49,6 +49,11 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 entrypoint = os.path.join(project_root, 'main.py')
 icon = "C:\SUP_CONFIG\icone.ico"
 
+# Pastas essenciais do projeto
+folders = [
+    'modulos', 'ia', 'driver', 'interface_humana', 'servidor', 'celebro_coletivo', 'arquitetura'
+]
+
 cmd = [
     sys.executable, '-m', 'PyInstaller',
     entrypoint,
@@ -65,6 +70,13 @@ cmd = [
     '--hidden-import=multiprocessing',
     '--clean'
 ]
+
+# Adiciona todas as pastas e submódulos essenciais
+for folder in folders:
+    folder_path = os.path.join(project_root, folder)
+    if os.path.exists(folder_path):
+        cmd.append('--add-data=' + folder_path + ';' + folder)
+        cmd.append('--collect-submodules=' + folder)
 
 print("Comando PyInstaller gerado:")
 print(" ".join(cmd))
