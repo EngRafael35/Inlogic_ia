@@ -47,7 +47,16 @@ sc delete InLogicService
 # Caminhos fixos para build enxuto
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 entrypoint = os.path.join(project_root, 'main.py')
-icon = "C:\SUP_CONFIG\icone.ico"
+icon = "C:\\SUP_CONFIG\\icone.ico"
+dist_path = os.path.join(project_root, 'dist', 'Service.exe')
+
+# Remove o executável antigo se existir
+if os.path.exists(dist_path):
+    try:
+        os.remove(dist_path)
+        print(f"Executável antigo removido: {dist_path}")
+    except Exception as e:
+        print(f"Não foi possível remover o executável antigo: {e}")
 
 # Pastas essenciais do projeto
 folders = [

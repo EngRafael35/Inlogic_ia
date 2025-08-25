@@ -506,7 +506,7 @@ class SistemaPrincipal:
             log('INFO', self.source_name, "Salvando estado final da IA...")
             self.ia_manager.parar()
             
-        log('SUCCESS', self.source_name, "Sistema parado com sucesso.")
+        log('SUCCESS', self.source_name, "Sistema completo parado com sucesso.")
 
     # --- 4. O MÉTODO 'reinicializar_sistema' é mantido para ser chamado via API ---
     def reinicializar_sistema(self):

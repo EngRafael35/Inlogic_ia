@@ -49,6 +49,8 @@ class InLogicService(win32serviceutil.ServiceFramework):
         self.running = False  # Sinaliza para o loop principal do serviço
         if self.sistema:
             self.sistema.parar()  # Chama o shutdown seguro do sistema principal
+            servicemanager.LogInfoMsg("InLogicService | Chamando metodo de parada global do sistema >> (self.sistema.parar()) ...")
+
         win32event.SetEvent(self.hWaitStop)  # Libera o evento para terminar o serviço
         self.ReportServiceStatus(win32service.SERVICE_STOPPED)  # Informa ao Windows que terminou
         logging.shutdown()  # Finaliza os handlers de log para evitar perda de dados
@@ -61,12 +63,12 @@ class InLogicService(win32serviceutil.ServiceFramework):
         """
 
         try:
-            servicemanager.LogInfoMsg("InLogicService | Inicializando...")
+            servicemanager.LogInfoMsg("InLogicService | Iniciaando...")
             self.ReportServiceStatus(win32service.SERVICE_START_PENDING, waitHint=30000)
 
             # importa e instancia apenas aqui!
             from multiprocessing import Manager
-            from sistema import SistemaPrincipal
+            from modulos.sistema import SistemaPrincipal
             self.sistema = SistemaPrincipal(Manager())
 
             # roda em background para não travar
@@ -75,9 +77,12 @@ class InLogicService(win32serviceutil.ServiceFramework):
                 daemon=True
             ).start()
 
+            # 🚀 Aqui informamos ao Windows que o serviço está ativo
+            self.ReportServiceStatus(win32service.SERVICE_RUNNING)
+
             while self.running:
                 # healthcheck simples
-                servicemanager.LogInfoMsg("InLogicService | vivo...")
+                servicemanager.LogInfoMsg("InLogicService | Iniciado com sucesso!")
                 time.sleep(10)
 
         except Exception:

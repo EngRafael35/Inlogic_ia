@@ -84,10 +84,28 @@ import json
 import time
 import psutil
 import datetime
+import traceback
 from flask import Flask, app, jsonify, request
 from werkzeug.serving import make_server
 import threading
 from modulos.logger import log
+
+def make_json_safe(obj):
+    """
+    Função auxiliar recursiva para converter um objeto complexo (dicionários, listas)
+    em algo que o JSON possa serializar, tratando sets, datetimes, etc.
+    """
+    if isinstance(obj, dict):
+        return {k: make_json_safe(v) for k, v in obj.items()}
+    elif isinstance(obj, list) or isinstance(obj, set):
+        return [make_json_safe(elem) for elem in obj]
+    elif isinstance(obj, datetime.datetime):
+        return obj.isoformat()
+    # Adicione aqui outras conversões se tiver objetos customizados
+    # elif isinstance(obj, MeuObjetoCustomizado):
+    #     return obj.to_dict() 
+    else:
+        return obj
 
 # Uma classe para encapsular nosso servidor
 class ServidorAPI(threading.Thread):
@@ -132,6 +150,9 @@ class ServidorAPI(threading.Thread):
             log('INFO', 'SERVIDOR', "✅ Sistema reinicializado com sucesso!")
         except Exception as e:
             log('ERROR', 'SERVIDOR', f"❌ Erro durante a reinicialização: {e}")
+
+
+
 
     def _configurar_rotas(self):
         # Rota para escrita em lote de tags no driver
@@ -314,40 +335,51 @@ class ServidorAPI(threading.Thread):
                 }), 500
 
 
-
         @self.app.route('/api/ia/conhecimento', methods=['GET'])
         def get_ia_conhecimento():
-            """Retorna o conhecimento global compartilhado entre as IAs."""
+            """
+            Retorna o conhecimento global compartilhado entre as IAs de forma robusta,
+            lidando com o estado de inicialização e garantindo a serialização JSON.
+            """
             try:
-                # ... (verificações iniciais de if not self.sistema.ia_manager, etc.) ...
+                # --- VERIFICAÇÃO DE INICIALIZAÇÃO MELHORADA ---
+                # Verifica se o subsistema de IA está pronto.
                 if not hasattr(self.sistema, 'ia_manager') or not hasattr(self.sistema.ia_manager, 'coordenador'):
-                    return jsonify({"status": "error", "message": "Coordenador de IA não está disponível"}), 404
+                    # Em vez de 404 (Not Found), usamos 503 (Service Unavailable).
+                    # Isso informa corretamente à UI que o servidor está aqui, mas o serviço específico ainda não está pronto.
+                    return jsonify({
+                        "status": "initializing",
+                        "message": "O subsistema de IA ainda está sendo inicializado. Tente novamente em alguns segundos."
+                    }), 503 # MUDANÇA IMPORTANTE DE STATUS
 
-                # Obtém e converte o conhecimento global
+                # Obtém cópias dos dados para evitar problemas de concorrência durante a leitura
                 conhecimento = dict(self.sistema.ia_manager.coordenador.conhecimento_global)
-                estado_sync_original = dict(self.sistema.ia_manager.coordenador.estado_sync)
+                estado_sync = dict(self.sistema.ia_manager.coordenador.estado_sync)
 
-                # ---> INÍCIO DA CORREÇÃO <---
-                # Converte o 'set' para 'list' para ser compatível com JSON
-                if 'nos_sincronizados' in estado_sync_original and isinstance(estado_sync_original['nos_sincronizados'], set):
-                    estado_sync_original['nos_sincronizados'] = list(estado_sync_original['nos_sincronizados'])
-                # ---> FIM DA CORREÇÃO <---
-
+                # --- SERIALIZAÇÃO À PROVA DE FALHAS ---
+                # Usa a função auxiliar para limpar os dados antes de enviar ao jsonify
+                safe_conhecimento = make_json_safe(conhecimento)
+                safe_estado_sync = make_json_safe(estado_sync)
+                
                 return jsonify({
                     "status": "success",
                     "conhecimento": {
-                        "dados": conhecimento,
-                        "sincronizacao": estado_sync_original, # Usa a versão corrigida
+                        "dados": safe_conhecimento,
+                        "sincronizacao": safe_estado_sync,
                         "ultima_atualizacao": datetime.datetime.now().isoformat()
                     }
                 })
+
             except Exception as e:
-                log('ERROR', 'SERVIDOR', f"❌ Erro ao obter conhecimento da IA: {e}")
+                # --- LOG DE ERRO APRIMORADO ---
+                # Loga o traceback completo para facilitar a depuração de erros inesperados.
+                detailed_error = traceback.format_exc()
+                log('ERROR', 'SERVIDOR', f"❌ Erro crítico ao obter conhecimento da IA: {e}\n{detailed_error}")
+                
                 return jsonify({
                     "status": "error",
-                    "message": f"Erro ao obter conhecimento da IA: {str(e)}"
+                    "message": f"Erro interno do servidor ao processar o conhecimento da IA: {str(e)}"
                 }), 500
-
 
         @self.app.route('/api/ia/metricas', methods=['GET'])
         def get_ia_metricas():
